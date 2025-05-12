@@ -37,6 +37,15 @@ local devices = {
         return clusters.Level.attributes.OffTransitionTime:write(device, raw_value)
       end
     }
+  },
+  AQARA_LIGHT_BULB = {
+    MATCHING_MATRIX = { mfr = "Aqara", model = "lumi.light.acn014" },
+    PARAMETERS = {
+      ["stse.restorePowerState"] = function(device, value)
+        return cluster_base.write_manufacturer_specific_attribute(device, 0xFCC0,
+          0x0201, 0x115F, data_types.Boolean, value)
+      end
+    }
   }
 }
 local preferences = {}
@@ -45,7 +54,19 @@ preferences.update_preferences = function(driver, device, args)
   local prefs = preferences.get_device_parameters(device)
   if prefs ~= nil then
     for id, value in pairs(device.preferences) do
-      if not (args and args.old_st_store) or (args.old_st_store.preferences[id] ~= value and prefs and prefs[id]) then
+      if not (args and args.old_st_store and args.old_st_store.preferences) or (args.old_st_store.preferences[id] ~= value and prefs and prefs[id]) then
+        local message = prefs[id](device, value)
+        device:send(message)
+      end
+    end
+  end
+end
+
+preferences.sync_preferences = function(driver, device)
+  local prefs = preferences.get_device_parameters(device)
+  if prefs ~= nil then
+    for id, value in pairs(device.preferences) do
+      if prefs and prefs[id] then
         local message = prefs[id](device, value)
         device:send(message)
       end

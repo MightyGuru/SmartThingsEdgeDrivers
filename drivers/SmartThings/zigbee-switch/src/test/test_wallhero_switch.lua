@@ -17,6 +17,8 @@ local clusters = require "st.zigbee.zcl.clusters"
 local capabilities = require "st.capabilities"
 local frameCtrl = require "st.zigbee.zcl.frame_ctrl"
 local test = require "integration_test"
+local cluster_base = require "st.zigbee.cluster_base"
+local data_types = require "st.zigbee.data_types"
 local t_utils = require "integration_test.utils"
 local zigbee_test_utils = require "integration_test.zigbee_test_utils"
 
@@ -321,6 +323,30 @@ test.register_message_test(
     }
 )
 
+test.register_coroutine_test(
+  "Handle turnOffIndicatorLight in infochanged : On",
+  function()
+    test.socket.device_lifecycle:__queue_receive(mock_parent_device:generate_info_changed({
+      preferences = { ["stse.turnOffIndicatorLight"] = false }
+    }))
+    test.socket.zigbee:__expect_send({ mock_parent_device.id,
+      cluster_base.write_manufacturer_specific_attribute(mock_parent_device, 0x0006,
+        0x6000, 0x1235, data_types.Uint8, 0x01) })
+  end
+)
+
+test.register_coroutine_test(
+  "Handle turnOffIndicatorLight in infochanged : Off",
+  function()
+    test.socket.device_lifecycle:__queue_receive(mock_parent_device:generate_info_changed({
+      preferences = { ["stse.turnOffIndicatorLight"] = true }
+    }))
+    test.socket.zigbee:__expect_send({ mock_parent_device.id,
+      cluster_base.write_manufacturer_specific_attribute(mock_parent_device, 0x0006,
+        0x6000, 0x1235, data_types.Uint8, 0x00) })
+  end
+)
+
 test.register_message_test(
     "Capability on command switch on should be handled : parent device",
     {
@@ -333,6 +359,14 @@ test.register_message_test(
         channel = "capability",
         direction = "receive",
         message = { mock_parent_device.id, { capability = "switch", component = "main", command = "on", args = { } } }
+      },
+      {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_parent_device.id, capability_id = "switch", capability_cmd_id = "on" }
+        }
       },
       {
         channel = "zigbee",
@@ -351,6 +385,14 @@ test.register_message_test(
         message = { mock_first_child.id, { capability = "switch", component = "main", command = "on", args = { } } }
       },
       {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_first_child.id, capability_id = "switch", capability_cmd_id = "on" }
+        }
+      },
+      {
         channel = "zigbee",
         direction = "send",
         message = { mock_parent_device.id, OnOff.server.commands.On(mock_parent_device):to_endpoint(0x02) }
@@ -367,6 +409,14 @@ test.register_message_test(
         message = { mock_second_child.id, { capability = "switch", component = "main", command = "on", args = { } } }
       },
       {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_second_child.id, capability_id = "switch", capability_cmd_id = "on" }
+        }
+      },
+      {
         channel = "zigbee",
         direction = "send",
         message = { mock_parent_device.id, OnOff.server.commands.On(mock_parent_device):to_endpoint(0x03) }
@@ -381,6 +431,14 @@ test.register_message_test(
         channel = "capability",
         direction = "receive",
         message = { mock_third_child.id, { capability = "switch", component = "main", command = "on", args = { } } }
+      },
+      {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_third_child.id, capability_id = "switch", capability_cmd_id = "on" }
+        }
       },
       {
         channel = "zigbee",
@@ -400,6 +458,14 @@ test.register_message_test(
         message = { mock_parent_device.id, { capability = "switch", component = "main", command = "off", args = { } } }
       },
       {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_parent_device.id, capability_id = "switch", capability_cmd_id = "off" }
+        }
+      },
+      {
         channel = "zigbee",
         direction = "send",
         message = { mock_parent_device.id, OnOff.server.commands.Off(mock_parent_device):to_endpoint(0x01) }
@@ -414,6 +480,14 @@ test.register_message_test(
         channel = "capability",
         direction = "receive",
         message = { mock_first_child.id, { capability = "switch", component = "main", command = "off", args = { } } }
+      },
+      {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_first_child.id, capability_id = "switch", capability_cmd_id = "off" }
+        }
       },
       {
         channel = "zigbee",
@@ -432,6 +506,14 @@ test.register_message_test(
         message = { mock_second_child.id, { capability = "switch", component = "main", command = "off", args = { } } }
       },
       {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_second_child.id, capability_id = "switch", capability_cmd_id = "off" }
+        }
+      },
+      {
         channel = "zigbee",
         direction = "send",
         message = { mock_parent_device.id, OnOff.server.commands.Off(mock_parent_device):to_endpoint(0x03) }
@@ -446,6 +528,14 @@ test.register_message_test(
         channel = "capability",
         direction = "receive",
         message = { mock_third_child.id, { capability = "switch", component = "main", command = "off", args = { } } }
+      },
+      {
+        channel = "devices",
+        direction = "send",
+        message = {
+          "register_native_capability_cmd_handler",
+          { device_uuid = mock_third_child.id, capability_id = "switch", capability_cmd_id = "off" }
+        }
       },
       {
         channel = "zigbee",

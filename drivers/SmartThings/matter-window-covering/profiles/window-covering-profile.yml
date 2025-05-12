@@ -1,3 +1,4 @@
+# deprecated - please use window-covering-battery instead
 name: window-covering-profile
 components:
 - id: main
@@ -18,4 +19,6 @@ components:
   - name: Blind
 preferences:
   - preferenceId: presetPosition
+    explicit: true
+  - preferenceId: reverse
     explicit: true
